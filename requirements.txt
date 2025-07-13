@@ -1,0 +1,37 @@
+# requirements.txt
+# Core dependencies
+Flask # Lightweight web framework for potential future monitoring UI (or FastAPI)
+SQLAlchemy
+psycopg2-binary # PostgreSQL adapter
+python-dotenv # For loading environment variables
+
+# LLM & AI Services
+google-generativeai # For Gemini API
+openai # For OpenAI API
+stability-sdk # For Stability AI image generation
+
+# Web Scraping & HTML Parsing
+requests # Standard HTTP library
+beautifulsoup4 # For HTML parsing
+
+# Asynchronous Task Queue
+celery
+redis # Celery broker backend
+
+# Video Editing (Requires system dependency ffmpeg in Dockerfile)
+moviepy
+
+# Google Cloud Specific Libraries (for TTS, potentially GA4, GSC)
+google-cloud-texttospeech # For Text-to-Speech
+# google-api-python-client # General Google APIs (YouTube, AdSense, etc.)
+# google-auth-oauthlib # For OAuth 2.0 authentication with Google APIs
+# google-analytics-data # For GA4 data if not using BigQuery export
+# google-cloud-bigquery # If you export GA4 to BigQuery and query it
+
+# Other potential libraries (add as needed for specific API integrations)
+# python-twitter # For Twitter API
+# facebook-sdk # For Facebook Graph API
+# python-amazon-paapi # For Amazon Product Advertising API (complex)
+# razorpay # For Razorpay API (if using their client library)
+
+

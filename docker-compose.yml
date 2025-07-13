@@ -1,0 +1,98 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine # Lightweight Redis image
+    ports:
+      - "6379:6379" # Map container port 6379 to host port 6379
+    volumes:
+      - redis_data:/data # Persistent data for Redis to avoid data loss on container restart
+    restart: always # Always restart if it stops
+
+  db:
+    image: postgres:15-alpine # Lightweight PostgreSQL image
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432" # Map container port 5432 to host port 5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # Persistent data for PostgreSQL
+    restart: always # Always restart if it stops
+
+  worker:
+    build: . # Build from the current directory's Dockerfile
+    command: celery -A orchestrator.main_orchestrator worker -l info --concurrency=4 # Celery worker command
+    environment:
+      # Pass all necessary environment variables from the .env file to the container
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      STABILITY_AI_API_KEY: ${STABILITY_AI_API_KEY}
+      GCP_PROJECT_ID: ${GCP_PROJECT_ID}
+      BRIGHT_DATA_API_KEY: ${BRIGHT_DATA_API_KEY}
+      BRIGHT_DATA_ZONE: ${BRIGHT_DATA_ZONE}
+      BRIGHT_DATA_HOST: ${BRIGHT_DATA_HOST}
+      BRIGHT_DATA_PORT: ${BRIGHT_DATA_PORT}
+      WORDPRESS_API_URL: ${WORDPRESS_API_URL}
+      WORDPRESS_USERNAME: ${WORDPRESS_USERNAME}
+      WORDPRESS_APP_PASSWORD: ${WORDPRESS_APP_PASSWORD}
+      YOUTUBE_API_KEY: ${YOUTUBE_API_KEY}
+      ADSENSE_PUBLISHER_ID: ${ADSENSE_PUBLISHER_ID}
+      ADSENSE_AD_SLOT_ID: ${ADSENSE_AD_SLOT_ID}
+      AMAZON_ASSOCIATES_TAG: ${AMAZON_ASSOCIATES_TAG}
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET}
+      DB_HOST: db # Service name for the database within the docker-compose network
+      DB_PORT: 5432
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      CELERY_BROKER_URL: redis://redis:6379/0 # Redis service name
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    depends_on:
+      - redis # Ensure Redis is up before worker starts
+      - db    # Ensure DB is up before worker starts
+    volumes:
+      - ./data:/app/data # Mount local 'data' directory for persistent content assets
+    restart: on-failure # Restart if the worker process exits with an error
+
+  beat:
+    build: . # Build from the current directory's Dockerfile
+    command: celery -A orchestrator.main_orchestrator beat -l info # Celery beat scheduler command
+    environment:
+      # Same environment variables as worker, they need access to the same config
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      STABILITY_AI_API_KEY: ${STABILITY_AI_API_KEY}
+      GCP_PROJECT_ID: ${GCP_PROJECT_ID}
+      BRIGHT_DATA_API_KEY: ${BRIGHT_DATA_API_KEY}
+      BRIGHT_DATA_ZONE: ${BRIGHT_DATA_ZONE}
+      BRIGHT_DATA_HOST: ${BRIGHT_DATA_HOST}
+      BRIGHT_DATA_PORT: ${BRIGHT_DATA_PORT}
+      WORDPRESS_API_URL: ${WORDPRESS_API_URL}
+      WORDPRESS_USERNAME: ${WORDPRESS_USERNAME}
+      WORDPRESS_APP_PASSWORD: ${WORDPRESS_APP_PASSWORD}
+      YOUTUBE_API_KEY: ${YOUTUBE_API_KEY}
+      ADSENSE_PUBLISHER_ID: ${ADSENSE_PUBLISHER_ID}
+      ADSENSE_AD_SLOT_ID: ${ADSENSE_AD_SLOT_ID}
+      AMAZON_ASSOCIATES_TAG: ${AMAZON_ASSOCIATES_TAG}
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET}
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    depends_on:
+      - redis
+      - db
+    restart: on-failure # Restart if beat process exits with an error
+
+volumes:
+  redis_data: # Define named volume for Redis data persistence
+  postgres_data: # Define named volume for PostgreSQL data persistence
+```text
